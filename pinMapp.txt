@@ -1,0 +1,16 @@
+23 x 2
+46
+15px
+
+
+Pins	TC7258HNJ 	levelshifter in		levelshifterout		tc5020			tc5020(ur6
+OE					DISABLE				
+LAT					8					8					pin 4 LE
+CLK					1					1					pin 3 CLOCK
+A		A
+SDI																			pin 2 data
+B		B
+OE					6					6					OE	pin 21				
+C		C
+D 		EL
+E 		EH

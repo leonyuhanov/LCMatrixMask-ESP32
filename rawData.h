@@ -8,6 +8,7 @@ class rawData
     rawData(short int numLEDs, byte bytesPerLED);
     void setPixel(short int pixelIndex, byte *pixelColour);
     void getPixel(short int pixelIndex, byte *pixelColour);
+    void clearData();
     
     byte* LEDs;
     short int _frameLength;

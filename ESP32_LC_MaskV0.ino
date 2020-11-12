@@ -35,8 +35,7 @@ void setup()
   //set up SPI
   SPI.begin();
   SPI.setBitOrder(MSBFIRST);
-  //SPI.setFrequency(500000);
-  SPI.setFrequency(5000000);
+  SPI.setFrequency(20000000);
   
   //set up GPIO
   //Output Enable
@@ -51,6 +50,8 @@ void setup()
     pinMode(multiplexPins[tickCnt][0], OUTPUT);
     digitalWrite(multiplexPins[tickCnt][0], LOW);
   } 
+
+  
 }
 
 byte hasTimedOut()
@@ -68,60 +69,34 @@ void startTimer(unsigned long durationInMillis)
   timeData[2] = durationInMillis;
 }
 
-//  NODEmcu SPI APA102 LED Strip Driver code
 void renderLEDs()
 {
   byte chanCnt=0;
-  //for(chanCnt=0; chanCnt<5; chanCnt++)
-  for(chanCnt=1; chanCnt<17; chanCnt++)
+  for(chanCnt=0; chanCnt<32; chanCnt++)
   {
-    //setChanel( chans[chanCnt] );
-    setChanel( chanCnt );
-    digitalWrite(outputEnable, LOW);
     SPI.writeBytes(leds.LEDs, leds._frameLength);
     digitalWrite(latchPin, HIGH);
-    digitalWrite(latchPin, LOW);
     digitalWrite(outputEnable, HIGH);
+    setChanel( chanCnt, 5 );   
+    digitalWrite(outputEnable, LOW);
+    digitalWrite(latchPin, LOW);
   }
 }
 
 
-
+/
 void loop()
 {   
-  startTimer(1000);
-  while(!hasTimedOut())
-  {
-    dynamicMultiColourBlock.getColour(cIndex%dynamicMultiColourBlock._bandWidth, tempColour);
-    testData(tempColour);
-    cIndex++;
-  }
+  testLoop();
 
-  startTimer(1000);
-  tempColour[0] = maxValue;
-  tempColour[1] = 0;
-  tempColour[2] = 0;
+  /*
+  startTimer(100);  
   while(!hasTimedOut())
   {
-    testData(tempColour);
+    fillPixels(tempColour);
   }
-
-  startTimer(1000);
-  tempColour[0] = 0;
-  tempColour[1] = maxValue;
-  tempColour[2] = 0;
-  while(!hasTimedOut())
-  {
-    testData(tempColour);
-  }
-  startTimer(1000);
-  tempColour[0] = 0;
-  tempColour[1] = 0;
-  tempColour[2] = maxValue;
-  while(!hasTimedOut())
-  {
-    testData(tempColour);
-  }
+  tempColour[0] = (tempColour[0]-1)%maxValue;
+  */
   
   /*
   dynamicMultiColourBlock.getColour(cIndex%dynamicMultiColourBlock._bandWidth, tempColour);
@@ -137,18 +112,40 @@ void loop()
   */
 }
 
-void testData(byte *colourVal)
+void testLoop()
+{
+  unsigned short int trackCnt=0;
+
+  leds.LEDs[trackCnt] = 1;
+  while(true)
+  {
+    //startTimer(10);
+    //while(!hasTimedOut())
+    //{
+      renderLEDs();
+      yield();
+    //}
+    //leds.LEDs[trackCnt] = leds.LEDs[trackCnt] << 1;
+    leds.LEDs[trackCnt]++;
+    if(leds.LEDs[trackCnt]==0)
+    {
+      trackCnt = (trackCnt+1)%leds._frameLength;
+      leds.LEDs[trackCnt] = 1;
+    }
+  }
+
+  
+}
+
+void fillPixels(byte *colourVal)
 {
   for(tickCnt=0; tickCnt<numLeds; tickCnt++)
   {
     leds.setPixel(tickCnt, colourVal);
-  }
-  renderLEDs();
-  yield();
-  
+  }  
 }
 
-void setChanel(byte chanID)
+void setChanel(byte chanID, byte chanCnt)
 {
 	/*
 	A = 1
@@ -157,7 +154,7 @@ void setChanel(byte chanID)
 	D = 8
 	E = 16
 	*/
-	byte indexCount=5, acum=0, teller=1, id=chanID, mIndex=0;
+	byte indexCount=chanCnt, acum=0, teller=1, id=chanID, mIndex=0;
 	
 	for(indexCount; indexCount>0; indexCount--)
 	{
