@@ -83,12 +83,10 @@ void renderLEDs()
   }
 }
 
-
-/
 void loop()
 {   
-  testLoop();
-
+  //testLoop();
+	testLoop2();
   /*
   startTimer(100);  
   while(!hasTimedOut())
@@ -135,6 +133,53 @@ void testLoop()
   }
 
   
+}
+
+void testLoop2()
+{
+	
+    unsigned short int NUM_COLUMNS=100, NUM_ROWS = 32, NUM_BYTES = (NUM_COLUMNS/8+1); // +1 in case you don't choose a multiple of 8
+	  uint8_t spiBuffer[NUM_BYTES];
+    static int testX = 0;
+    static int testY = 0;
+
+  byte chanCnt=0;
+  for(chanCnt=0; chanCnt<32; chanCnt++)
+  {
+
+    // fill spiBuffer with all zeros except for a 1 in the testX position, when we're shifting out row testY
+    for(int k=0; k<NUM_BYTES; k++)
+	  {
+      if(testX/8 == k && chanCnt == testY)
+  		{
+              spiBuffer[k] = 0x80 >> (testX%8);
+      }
+  		else 
+  		{
+              spiBuffer[k] = 0x00;
+      }
+    }
+      SPI.writeBytes(spiBuffer, NUM_BYTES);
+      digitalWrite(latchPin, HIGH);
+      digitalWrite(outputEnable, HIGH);
+      setChanel( chanCnt, 5 );   
+      digitalWrite(outputEnable, LOW);
+      digitalWrite(latchPin, LOW);
+  }
+
+  // update testX/Y coordinate every pass through (though this could be every few passes, or only after a char was received via Serial)
+  testX++;
+  if(testX > NUM_COLUMNS)
+  {
+    testX = 0;
+    testY++;
+  }
+  if(testY > NUM_ROWS)
+  {
+    testX = 0;
+    testY = 0;
+  }
+
 }
 
 void fillPixels(byte *colourVal)
